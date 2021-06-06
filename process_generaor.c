@@ -27,16 +27,22 @@ int main(int argc, char *argv[])
         struct process * prc1 = (struct process*) malloc(sizeof(struct process));
         struct process * prc2 = (struct process*) malloc(sizeof(struct process));
         struct process* last = (struct process*) malloc(sizeof(struct process));
+        struct process* last2 = (struct process*) malloc(sizeof(struct process));
+        struct process* end = (struct process*) malloc(sizeof(struct process));
         prc->id = id;   prc->arrival=arrival;   prc->runtime = runtime;   prc->priority = priority;  
         fscanf(file , "%d %d %d %d" , &id , &arrival , &runtime , &priority);
         prc1->id = id;   prc1->arrival=arrival;   prc1->runtime = runtime;   prc1->priority = priority;  
         fscanf(file , "%d %d %d %d" , &id , &arrival , &runtime , &priority);
         prc2->id = id;   prc2->arrival=arrival;   prc2->runtime = runtime;   prc2->priority = priority;  
-        last->id=-1; last->arrival=prc2->arrival+1;  last->priority=-1;  last->runtime=5000;
+        last->id=0; last->arrival=prc1->arrival;  last->priority=-1;  last->runtime=5000;
+        last2->id=0; last2->arrival=prc2->arrival;  last2->priority=-1;  last2->runtime=5000;
+        end->id=-1; end->arrival=prc2->arrival;  end->priority=-1;  end->runtime=5000;
         add(process_list , prc);
         add(process_list , prc1);
-        add(process_list , prc2);
         add(process_list , last);
+        add(process_list , prc2);
+        add(process_list,last2);
+        add(process_list,end);
         
         printf("addition is done\n");
         fclose(file);
@@ -92,10 +98,11 @@ int main(int argc, char *argv[])
     // 5. Create a data structure for processes and provide it with its parameters.
      while(isEmpty(process_list)==0){
         struct process* ptr = search(process_list , x);
-        if(ptr!=NULL){
+        while(ptr!=NULL){
             sendMessage(msgq_id , ptr);
             printf("process arrived at time=%d\n" , getClk());
             clear(process_list , ptr);
+            ptr = search(process_list , x);
         }
         
         x= getClk();

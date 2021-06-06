@@ -67,6 +67,7 @@ void clear(struct list* ls , struct process* item){
         ptr->next = rm->next;
         free(rm);
     }
+    ls->count--;
 }
 
 void display(struct list* ls){
@@ -101,6 +102,7 @@ void add_sjf(struct list* ls , struct process* item){
         ls->head =(struct node*) malloc(sizeof(struct node));
         ls->head->data = item;
         ls->head->next = NULL;
+        ls->count++;
         return;
     }
     else{
@@ -119,6 +121,7 @@ void add_sjf(struct list* ls , struct process* item){
                     new_node->data = item;
                     new_node->next = back;
                     ls->head = new_node;
+                    ls->count++;
                     return;
                 }
                 new_node->data = item;
@@ -131,6 +134,7 @@ void add_sjf(struct list* ls , struct process* item){
         new_node->data = item;
         new_node->next = back->next;
         back->next = new_node;
+        ls->count++;
     }
 }
 

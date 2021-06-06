@@ -75,33 +75,36 @@ void FCFS(char* algo){
     while((ptr=receiveMessage(msgq_id))!=NULL){
         if(ptr->id == -1)
             break;
-        else{
+        while(ptr->id != 0){
             add(p_queue , ptr);
+            ptr = receiveMessage(msgq_id);
         }
-        struct process* prc = get_first(p_queue);
-        if(prc != NULL){
-            wait_time_sum = wait_time_sum + getClk() - prc->arrival;
-            total_running = total_running + prc->runtime;
-            process_num++;
-            int pid;
-            pid = fork();
-            if(pid==-1)
-                printf("error in forking\n");
-            else if(pid==0){
-                printf("a process forked from the scheduler with id=%d\n" ,prc->id );
-                compileAndRun("/home/ahmed/Desktop/project/process.out" , "process" , "process.out" ,algo  , NULL);
+        while(isEmpty(p_queue)==0){
+            struct process* prc = get_first(p_queue);
+            if(prc != NULL){
+                wait_time_sum = wait_time_sum + getClk() - prc->arrival;
+                total_running = total_running + prc->runtime;
+                process_num++;
+                int pid;
+                pid = fork();
+                if(pid==-1)
+                    printf("error in forking\n");
+                else if(pid==0){
+                    printf("a process forked from the scheduler with id=%d\n" ,prc->id );
+                    compileAndRun("/home/ahmed/Desktop/project/process.out" , "process" , "process.out" ,algo  , NULL);
+                }
+                else{
+                    int waited = getClk() - prc->arrival;
+                    fprintf(sch_log , "# At time %d process %d %s arr %d total %d remain %d wait %d\n" , getClk() , prc->id , "started" , prc->arrival , prc->runtime , prc->runtime , getClk()-prc->arrival);
+                    sendMessage(msgq_process , prc);
+                    int stat_loc;
+                    wait(&stat_loc);
+                    fprintf(sch_log , "# At time %d process %d %s arr %d total %d remain %d wait %d  TA %d  WTA %f\n" , getClk() , prc->id , "finished" , prc->arrival , prc->runtime , 0, waited , getClk()-prc->arrival , (getClk()-prc->arrival)/(float)prc->runtime);
+                    WTA_sum = WTA_sum + (float)(getClk()-prc->arrival)/prc->runtime;
+                    free(prc);
+                }
+            
             }
-            else{
-                int waited = getClk() - prc->arrival;
-                fprintf(sch_log , "# At time %d process %d %s arr %d total %d remain %d wait %d\n" , getClk() , prc->id , "started" , prc->arrival , prc->runtime , prc->runtime , getClk()-prc->arrival);
-                sendMessage(msgq_process , prc);
-                int stat_loc;
-                wait(&stat_loc);
-                fprintf(sch_log , "# At time %d process %d %s arr %d total %d remain %d wait %d  TA %d  WTA %f\n" , getClk() , prc->id , "finished" , prc->arrival , prc->runtime , 0, waited , getClk()-prc->arrival , (getClk()-prc->arrival)/(float)prc->runtime);
-                WTA_sum = WTA_sum + (float)(getClk()-prc->arrival)/prc->runtime;
-                free(prc);
-            }
-           
         }
         
         
@@ -125,36 +128,54 @@ void SJF(char* algo){
     total_running=0;
     current_time = getClk();
     struct process* ptr ;
+    int counter =0;
+    int x=0;
+    bool check = false;
     while((ptr=receiveMessage(msgq_id))!=NULL){
-        if(ptr->id == -1)
+        if(ptr->id == -1 && isEmpty(p_queue)==1)
             break;
+        else if(ptr->id == -1 && isEmpty(p_queue)==0){
+            counter=p_queue->count;
+            check=true;
+        }
         else{
+            counter=1;
+        }
+        while(ptr->id != 0 && ptr->id != -1){
+            printf("process received with id=%d\n" , ptr->id);
             add_sjf(p_queue , ptr);
+            ptr = receiveMessage(msgq_id);
         }
-        struct process* prc = get_first(p_queue);
-        if(prc != NULL){
-            wait_time_sum = wait_time_sum + getClk() - prc->arrival;
-            total_running = total_running + prc->runtime;
-            process_num++;
-            int pid;
-            pid = fork();
-            if(pid==-1)
-                printf("error in forking\n");
-            else if(pid==0){
-                printf("a process forked from the scheduler with id=%d\n" ,prc->id );
-                compileAndRun("/home/ahmed/Desktop/project/process.out" , "process" , "process.out" ,algo  , NULL);
+        while(x<counter){
+            struct process* prc = get_first(p_queue);
+            if(prc != NULL){
+                wait_time_sum = wait_time_sum + getClk() - prc->arrival;
+                total_running = total_running + prc->runtime;
+                process_num++;
+                int pid;
+                pid = fork();
+                if(pid==-1)
+                    printf("error in forking\n");
+                else if(pid==0){
+                    printf("a process forked from the scheduler with id=%d\n" ,prc->id );
+                    compileAndRun("/home/ahmed/Desktop/project/process.out" , "process" , "process.out" ,algo  , NULL);
+                }
+                else{
+                    int waited = getClk() - prc->arrival;
+                    fprintf(sch_log , "# At time %d process %d %s arr %d total %d remain %d wait %d\n" , getClk() , prc->id , "started" , prc->arrival , prc->runtime , prc->runtime , getClk()-prc->arrival);
+                    sendMessage(msgq_process , prc);
+                    int stat_loc;
+                    wait(&stat_loc);
+                    fprintf(sch_log , "# At time %d process %d %s arr %d total %d remain %d wait %d  TA %d  WTA  %f\n" , getClk() , prc->id , "finished" , prc->arrival , prc->runtime , 0, waited , getClk()-prc->arrival , (getClk()-prc->arrival)/(float) prc->runtime);
+                    WTA_sum = WTA_sum + (getClk()-prc->arrival)/(float)prc->runtime;
+                    free(prc);
+                }
             }
-            else{
-                int waited = getClk() - prc->arrival;
-                fprintf(sch_log , "# At time %d process %d %s arr %d total %d remain %d wait %d\n" , getClk() , prc->id , "started" , prc->arrival , prc->runtime , prc->runtime , getClk()-prc->arrival);
-                sendMessage(msgq_process , prc);
-                int stat_loc;
-                wait(&stat_loc);
-                fprintf(sch_log , "# At time %d process %d %s arr %d total %d remain %d wait %d  TA %d  WTA  %f\n" , getClk() , prc->id , "finished" , prc->arrival , prc->runtime , 0, waited , getClk()-prc->arrival , (getClk()-prc->arrival)/(float) prc->runtime);
-                WTA_sum = WTA_sum + (getClk()-prc->arrival)/(float)prc->runtime;
-                free(prc);
-            }
+            x++;
         }
+        x=0;
+        if(check == true)
+            break;
         
         
     }
