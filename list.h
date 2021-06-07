@@ -5,6 +5,10 @@ struct process {
     int arrival;
     int runtime;
     int priority;
+    int last_process;  // (1) means last process in all processes
+    int last_in_second;  // (1) means last process in this second
+    int remaining_time;
+    int pid;
     //int TA;
     //int waiting;
 };

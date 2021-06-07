@@ -26,22 +26,23 @@ int main(int argc, char *argv[])
         struct process * prc = (struct process*) malloc(sizeof(struct process));
         struct process * prc1 = (struct process*) malloc(sizeof(struct process));
         struct process * prc2 = (struct process*) malloc(sizeof(struct process));
-        struct process* last = (struct process*) malloc(sizeof(struct process));
-        struct process* last2 = (struct process*) malloc(sizeof(struct process));
+        //struct process* last = (struct process*) malloc(sizeof(struct process));
+        //struct process* last2 = (struct process*) malloc(sizeof(struct process));
         struct process* end = (struct process*) malloc(sizeof(struct process));
-        prc->id = id;   prc->arrival=arrival;   prc->runtime = runtime;   prc->priority = priority;  
+        prc->id = id;   prc->arrival=arrival;   prc->runtime = runtime;   prc->priority = priority;  prc->remaining_time=0; prc->last_process=0;  prc->last_in_second=0;
         fscanf(file , "%d %d %d %d" , &id , &arrival , &runtime , &priority);
-        prc1->id = id;   prc1->arrival=arrival;   prc1->runtime = runtime;   prc1->priority = priority;  
+        prc1->id = id;   prc1->arrival=arrival;   prc1->runtime = runtime;   prc1->priority = priority;  prc1->last_process=0; prc1->remaining_time=0;  prc1->last_in_second=1;
         fscanf(file , "%d %d %d %d" , &id , &arrival , &runtime , &priority);
-        prc2->id = id;   prc2->arrival=arrival;   prc2->runtime = runtime;   prc2->priority = priority;  
-        last->id=0; last->arrival=prc1->arrival;  last->priority=-1;  last->runtime=5000;
-        last2->id=0; last2->arrival=prc2->arrival;  last2->priority=-1;  last2->runtime=5000;
-        end->id=-1; end->arrival=prc2->arrival;  end->priority=-1;  end->runtime=5000;
+        prc2->id = id;   prc2->arrival=arrival;   prc2->runtime = runtime;   prc2->priority = priority;   prc2->remaining_time=0;  prc2->last_process=0;  prc2->last_in_second=0;
+        //last->id=0; last->arrival=prc1->arrival;  last->priority=-1;  last->runtime=5000;
+        //last2->id=0; last2->arrival=prc2->arrival;  last2->priority=-1;  last2->runtime=5000;
+        fscanf(file , "%d %d %d %d" , &id , &arrival , &runtime , &priority);
+        end->id=id;  end->arrival=arrival;  end->priority=priority;  end->runtime=runtime;  end->last_process=1; end->remaining_time=0; end->last_in_second=1;
         add(process_list , prc);
         add(process_list , prc1);
-        add(process_list , last);
+        //add(process_list , last);
         add(process_list , prc2);
-        add(process_list,last2);
+        //add(process_list,last2);
         add(process_list,end);
         
         printf("addition is done\n");
@@ -98,12 +99,13 @@ int main(int argc, char *argv[])
     // 5. Create a data structure for processes and provide it with its parameters.
      while(isEmpty(process_list)==0){
         struct process* ptr = search(process_list , x);
-        while(ptr!=NULL){
-            sendMessage(msgq_id , ptr);
-            printf("process arrived at time=%d\n" , getClk());
-            clear(process_list , ptr);
-            ptr = search(process_list , x);
-        }
+            while(ptr!=NULL){
+                sendMessage(msgq_id , ptr);
+                printf("process arrived at time=%d\n" , getClk());
+                clear(process_list , ptr);
+                ptr = search(process_list , x);
+            }
+        
         
         x= getClk();
         //printf("Current Time is %d\n", x);

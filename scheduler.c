@@ -69,16 +69,28 @@ void FCFS(char* algo){
     WTA_sum = 0;
     total_running=0;
     current_time = getClk();
+    int last = 0;
 
     struct process* ptr ;
     
     while((ptr=receiveMessage(msgq_id))!=NULL){
-        if(ptr->id == -1)
-            break;
-        while(ptr->id != 0){
-            add(p_queue , ptr);
-            ptr = receiveMessage(msgq_id);
-        }
+            if(ptr->last_process == 1){
+                last=1;
+                add(p_queue,ptr);
+            }
+            else{
+                while(1){
+                    if(ptr->last_in_second == 1){
+                        if(ptr->last_process)
+                            last=1;
+                        add(p_queue , ptr);
+                        break;
+                    }
+                    add(p_queue , ptr);
+                    ptr = receiveMessage(msgq_id);
+                }
+            }
+            
         while(isEmpty(p_queue)==0){
             struct process* prc = get_first(p_queue);
             if(prc != NULL){
@@ -106,6 +118,8 @@ void FCFS(char* algo){
             
             }
         }
+        if(last==1)
+            break;
         
         
     }
@@ -129,18 +143,37 @@ void SJF(char* algo){
     current_time = getClk();
     struct process* ptr ;
     int counter =0;
+    int last=0;
     int x=0;
     bool check = false;
     while((ptr=receiveMessage(msgq_id))!=NULL){
-        if(ptr->id == -1 && isEmpty(p_queue)==1)
-            break;
-        else if(ptr->id == -1 && isEmpty(p_queue)==0){
-            counter=p_queue->count;
-            check=true;
+        if(ptr->id != 0){
+            if(ptr->last_process == 1){
+                add_sjf(p_queue , ptr);
+                last=1;
+                counter = p_queue->count;
+            }
+            else{
+                while(1){
+                    if(ptr->last_in_second == 1){
+                        if(ptr->last_process){
+                            last=1;
+                            add_sjf(p_queue , ptr);
+                            counter = p_queue->count;
+                            break;
+                        }
+                        add_sjf(p_queue , ptr);
+                        counter=1;
+                        break;
+                    }
+                    add_sjf(p_queue , ptr);
+                    ptr = receiveMessage(msgq_id);
+                }
+            }
         }
-        else{
+        /*else{
             counter=1;
-        }
+        }*/
         while(ptr->id != 0 && ptr->id != -1){
             printf("process received with id=%d\n" , ptr->id);
             add_sjf(p_queue , ptr);
