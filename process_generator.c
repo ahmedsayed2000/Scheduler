@@ -25,12 +25,16 @@ int main(int argc, char *argv[])
         size_t len = 0;
         char *line = NULL;
         int numberOfProcesses = 0;
+        //getline(&line, &len, file);
         while (getline(&line, &len, file) != -1)
-            numberOfProcesses++;
+             if (line[0] != '#')
+                numberOfProcesses++;
+        printf("process num is %d\n" , numberOfProcesses);
 
         fclose(file);
         file = fopen(process_file , "r");
         int id,arrival,runtime,priority;
+        getline(&line, &len, file);
         fscanf(file , "%d\t%d\t%d\t%d" , &id , &arrival , &runtime , &priority);
         struct process* last=(struct process*)malloc(sizeof(struct process));
         last->arrival=arrival;  last->id=id;  last->priority=priority; last->runtime=runtime;  last->remaining_time=runtime;  last->last_process=0;  last->last_in_second=0;
@@ -66,7 +70,7 @@ int main(int argc, char *argv[])
     // 2. Read the chosen scheduling algorithm and its parameters, if there are any from the argument list.
     char* algo = argv[2];
     char* quantom = NULL;
-    if(strcmp(algo,"rr")==0)
+    if(strcmp(algo,"5")==0)
     {
         quantom = argv[3];
        // printf("qhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhq=%s\n",quantom);
@@ -139,7 +143,7 @@ void clearResources(int signum)
     //TODO Clears all resources in case of interruption
     //kill(0 , SIGKILL);
     printf("generator interrupted\n");
-    msgctl(msgq_id , IPC_RMID , (struct msqid_ds*) 0);
+    msgctl(msgq_id , IPC_RMID , (struct msqid_ds*) 0); 
 
 }
 

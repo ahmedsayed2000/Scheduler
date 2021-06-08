@@ -43,7 +43,7 @@ char *quatom;
 struct list *temp;
 void calculate();
 void readAll(struct process*);
-void readAll_sjf(struct process*);
+void readAll_sjf();
 
 int main(int argc, char *argv[])
 {
@@ -52,11 +52,11 @@ int main(int argc, char *argv[])
     algo = argv[1];
     shmid = initShm(shmProcessKey, 4);
     open_files();
-    if (strcmp(algo, "fcfs") == 0)
+    if (strcmp(algo, "1") == 0)
         FCFS(algo);
-    else if (strcmp(algo, "sjf") == 0)
+    else if (strcmp(algo, "2") == 0)
         SJF(algo);
-    else if (strcmp(algo, "rr") == 0)
+    else if (strcmp(algo, "5") == 0)
     {
 
         quatom = argv[2];
@@ -64,9 +64,9 @@ int main(int argc, char *argv[])
         //printf("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq=%s\n",quatom);
         RR(algo, quatom);
     }
-    else if (strcmp(algo, "srtn") == 0)
+    else if (strcmp(algo, "4") == 0)
         SRTN(algo);
-    else if (strcmp(algo, "hpf"))
+    else if (strcmp(algo, "3")==0)
         HPF(algo);
     //TODO: implement the scheduler.
     //TODO: upon termination release the clock resources.
@@ -149,7 +149,7 @@ void SJF(char* algo){
     struct process* ptr ;
     lastprocess=0;
     while(!(lastprocess && isEmpty(p_queue))){
-        readAll_sjf(ptr);
+        readAll_sjf();
         struct process* prc =get_first(p_queue);
         if(prc){
                 wait_time_sum = wait_time_sum + getClk() - prc->arrival;
@@ -175,7 +175,7 @@ void SJF(char* algo){
                 }
             }
         }
-    
+    calculate();
 }
         
 
@@ -254,7 +254,7 @@ int startProcess(struct process *prc)
     //sch_log = fopen("scheduler.log", "w");
     fprintf(sch_log, "At time %d process %d started arr %d total %d remain %d wait %d\n",
             getClk(), prc->id, prc->arrival, prc->runtime,
-            prc->remaining_time, getClk() - prc->arrival - (prc->runtime - prc->remaining_time));
+            prc->remaining_time, getClk() - prc->arrival);
 
     return prc->pid;
 }
@@ -299,19 +299,20 @@ void readAll(struct process * prc){
         add(p_queue , prc);
         if(prc->last_in_second)
             break;
-        prc = receiveMessage(msgq_id);
+        prc = receiveMessage_NOWAIT(msgq_id);
     }
     display(p_queue);
     printf("clock=%d\n", getClk());
 }
-void readAll_sjf(struct process * prc){
-    prc = receiveMessage_NOWAIT(msgq_id);
+void readAll_sjf(){
+    struct process* prc = receiveMessage_NOWAIT(msgq_id);
     while(prc){
         lastprocess = prc->last_process;
         add_sjf(p_queue , prc);
-        if(prc->last_in_second)
-            break;
-        prc = receiveMessage(msgq_id);
+        printf("process added to the ready queue with id=%d and position=%d\n" , prc->id , 1);
+        /*if(prc->last_in_second)
+            break;*/
+        prc = receiveMessage_NOWAIT(msgq_id);
     }
     display(p_queue);
     printf("clock=%d\n", getClk());
@@ -345,8 +346,7 @@ void RR(char *algo, char *Qua)
     while (!((*shmRM == -1) && isEmpty(p_queue) && lastprocess))
     {
         cnt--;
-        //readqueue(ptr);
-        readAll(ptr);
+        readqueue(ptr);
         if (*shmRM == 0)
         {
             finishProcess(ptr);
@@ -401,7 +401,7 @@ void SRTN(char *algo)
     while (!((*shmRM == -1) && isEmpty(p_queue) && lastprocess))
     {
         //readqueue(ptr);
-        readAll_sjf(ptr);
+        readAll_sjf();
         if (*shmRM == 0)
         {
             finishProcess(ptr);

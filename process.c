@@ -20,12 +20,11 @@ int main(int agrc, char *argv[])
     initClk();
 
     char *algo = argv[1];
-    if (strcmp(algo, "fcfs") == 0 || strcmp(algo, "sjf") == 0)
+    if (strcmp(algo, "1") == 0 || strcmp(algo, "2") == 0)
         FCFS_OR_SJF();
-    else if (strcmp(algo, "rr") == 0 || strcmp(algo , "srtn"))
+    else if (strcmp(algo, "5") == 0 || strcmp(algo , "4"))
     {
-        if(strcmp(algo, "rr") == 0 )
-            quantom = atoi(argv[2]);
+        
 
         int check = -1;
         shmid = initShm(shmProcessKey, 4);
