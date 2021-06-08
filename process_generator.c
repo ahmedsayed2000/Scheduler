@@ -22,31 +22,40 @@ int main(int argc, char *argv[])
     }
     else{
         initList(process_list);
-        fscanf(file , "%d %d %d %d" , &id , &arrival , &runtime , &priority);
-        struct process * prc = (struct process*) malloc(sizeof(struct process));
-        struct process * prc1 = (struct process*) malloc(sizeof(struct process));
-        struct process * prc2 = (struct process*) malloc(sizeof(struct process));
-        //struct process* last = (struct process*) malloc(sizeof(struct process));
-        //struct process* last2 = (struct process*) malloc(sizeof(struct process));
-        struct process* end = (struct process*) malloc(sizeof(struct process));
-        prc->id = id;   prc->arrival=arrival;   prc->runtime = runtime;   prc->priority = priority;  prc->remaining_time=prc->runtime; prc->last_process=0;  prc->last_in_second=0;
-        fscanf(file , "%d %d %d %d" , &id , &arrival , &runtime , &priority);
-        prc1->id = id;   prc1->arrival=arrival;   prc1->runtime = runtime;   prc1->priority = priority;  prc1->last_process=0; prc1->remaining_time=prc1->runtime;;  prc1->last_in_second=1;
-        fscanf(file , "%d %d %d %d" , &id , &arrival , &runtime , &priority);
-        prc2->id = id;   prc2->arrival=arrival;   prc2->runtime = runtime;   prc2->priority = priority;   prc2->remaining_time=prc2->runtime;  prc2->last_process=0;  prc2->last_in_second=0;
-        //last->id=0; last->arrival=prc1->arrival;  last->priority=-1;  last->runtime=5000;
-        //last2->id=0; last2->arrival=prc2->arrival;  last2->priority=-1;  last2->runtime=5000;
-        fscanf(file , "%d %d %d %d" , &id , &arrival , &runtime , &priority);
-        end->id=id;  end->arrival=arrival;  end->priority=priority;  end->runtime=runtime;  end->last_process=1; end->remaining_time=end->runtime;; end->last_in_second=1;
-        add(process_list , prc);
-        add(process_list , prc1);
-        //add(process_list , last);
-        add(process_list , prc2);
-        //add(process_list,last2);
-        add(process_list,end);
-        
-        printf("addition is done\n");
+        size_t len = 0;
+        char *line = NULL;
+        int numberOfProcesses = 0;
+        while (getline(&line, &len, file) != -1)
+            numberOfProcesses++;
+
         fclose(file);
+        file = fopen(process_file , "r");
+        int id,arrival,runtime,priority;
+        fscanf(file , "%d\t%d\t%d\t%d" , &id , &arrival , &runtime , &priority);
+        struct process* last=(struct process*)malloc(sizeof(struct process));
+        last->arrival=arrival;  last->id=id;  last->priority=priority; last->runtime=runtime;  last->remaining_time=runtime;  last->last_process=0;  last->last_in_second=0;
+        int last_second=last->arrival;
+        add(process_list , last);
+        int temp=0;
+        while (temp<numberOfProcesses-1)
+        {
+            fscanf(file , "%d\t%d\t%d\t%d" , &id , &arrival , &runtime , &priority);
+
+            struct process* ptr = (struct process*)malloc(sizeof(struct process));
+            ptr->id = id;  ptr->arrival=arrival;  ptr->runtime=runtime;  ptr->priority=priority; ptr->remaining_time=runtime;  ptr->last_process=0;  ptr->last_in_second=0;
+            add(process_list , ptr);
+            if(arrival != last_second){
+                last->last_in_second=1;
+            }
+            last = ptr;
+            last_second = last->arrival;
+            temp++;
+        }
+        fclose(file);
+        last->last_process=1;
+        last->last_in_second=1;
+        printf("last process id=%d\n" , last->id);
+        display(process_list);
     }
     printf("message queue is done\n");
     key_t key = ftok("keyfile" , Mkey);

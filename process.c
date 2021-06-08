@@ -22,28 +22,28 @@ int main(int agrc, char *argv[])
     char *algo = argv[1];
     if (strcmp(algo, "fcfs") == 0 || strcmp(algo, "sjf") == 0)
         FCFS_OR_SJF();
-    else if (strcmp(algo, "rr") == 0)
+    else if (strcmp(algo, "rr") == 0 || strcmp(algo , "srtn"))
     {
-        
-        quantom = atoi(argv[2]);
-      //  printf("argv=%s\n",argv[2]);
-        //printf("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq=%d\n",quantom);
-    }
+        if(strcmp(algo, "rr") == 0 )
+            quantom = atoi(argv[2]);
 
-    int check = -1;
-    shmid = initShm(shmProcessKey, 4);
-    RM = (int *)shmAttach(shmid);
+        int check = -1;
+        shmid = initShm(shmProcessKey, 4);
+        RM = (int *)shmAttach(shmid);
 
-    while (*RM > 0)
-    {
-        while (check == getClk())
-            ;
-        if (check != getClk())
+        while (*RM > 0)
         {
-            (*RM)--;
-            check = getClk();
+            while (check == getClk())
+                     ;
+            if (check != getClk())
+            {
+                (*RM)--;
+                check = getClk();
+            }
         }
     }
+
+    
     //TODO The process needs to get the remaining time from somewhere
     //remainingtime = ??;
 

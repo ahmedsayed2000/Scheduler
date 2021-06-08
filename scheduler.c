@@ -42,6 +42,8 @@ char *algo;
 char *quatom;
 struct list *temp;
 void calculate();
+void readAll(struct process*);
+void readAll_sjf(struct process*);
 
 int main(int argc, char *argv[])
 {
@@ -72,181 +74,110 @@ int main(int argc, char *argv[])
     destroyClk(true);
 }
 
-void FCFS(char *algo)
-{
-    p_queue = (struct list *)malloc(sizeof(struct list));
+void FCFS(char* algo){
+    
+    p_queue = (struct list*) malloc(sizeof(struct list));
     initList(p_queue);
-    key_t key1 = ftok("keyfile", Mkey);
+    key_t key1 = ftok("keyfile" , Mkey);
     msgq_id = init_msgq(key1);
-    key_t key3 = ftok("keyfile", Pkey);
+    key_t key3 = ftok("keyfile" , Pkey);
     msgq_process = init_msgq(key3);
 
-    wait_time_sum = 0;
-    process_num = 0;
+    wait_time_sum=0;
+    process_num =0;
     WTA_sum = 0;
-    total_running = 0;
-    current_time = getClk();
-    int last = 0;
-
-    struct process *ptr;
-
-    while ((ptr = receiveMessage(msgq_id)) != NULL)
-    {
-        if (ptr->last_process == 1)
-        {
-            last = 1;
-            add(p_queue, ptr);
+    total_running=0;
+    struct process* ptr;
+    int last=0;
+    while((ptr=receiveMessage(msgq_id))!=NULL ){
+        if(ptr->last_process){
+            last=1;
         }
-        else
-        {
-            while (1)
-            {
-                if (ptr->last_in_second == 1)
-                {
-                    if (ptr->last_process)
-                        last = 1;
-                    add(p_queue, ptr);
-                    break;
-                }
-                add(p_queue, ptr);
-                ptr = receiveMessage(msgq_id);
-            }
-        }
+        
+        add(p_queue , ptr);
 
-        while (isEmpty(p_queue) == 0)
-        {
-            struct process *prc = get_first(p_queue);
-            if (prc != NULL)
-            {
+        while(isEmpty(p_queue)==0){
+        struct process* prc = get_first(p_queue);
+        if(prc != NULL){
                 wait_time_sum = wait_time_sum + getClk() - prc->arrival;
                 total_running = total_running + prc->runtime;
                 process_num++;
                 int pid;
                 pid = fork();
-                if (pid == -1)
+                if(pid==-1)
                     printf("error in forking\n");
-                else if (pid == 0)
-                {
-                    printf("a process forked from the scheduler with id=%d\n", prc->id);
-                    compileAndRun("process.out", "process", "process.out", algo, NULL);
+                else if(pid==0){
+                    printf("a process forked from the scheduler with id=%d\n" ,prc->id );
+                    compileAndRun("process.out" , "process" , "process.out" ,algo  , NULL);
                 }
-                else
-                {
+                else{
                     int waited = getClk() - prc->arrival;
-                    fprintf(sch_log, "# At time %d process %d %s arr %d total %d remain %d wait %d\n", getClk(), prc->id, "started", prc->arrival, prc->runtime, prc->runtime, getClk() - prc->arrival);
-                    sendMessage(msgq_process, prc);
+                    fprintf(sch_log , "At time %d process %d %s arr %d total %d remain %d wait %d\n" , getClk() , prc->id , "started" , prc->arrival , prc->runtime , prc->runtime , getClk()-prc->arrival);
+                    sendMessage(msgq_process , prc);
                     int stat_loc;
                     wait(&stat_loc);
-                    fprintf(sch_log, "# At time %d process %d %s arr %d total %d remain %d wait %d  TA %d  WTA %f\n", getClk(), prc->id, "finished", prc->arrival, prc->runtime, 0, waited, getClk() - prc->arrival, (getClk() - prc->arrival) / (float)prc->runtime);
-                    WTA_sum = WTA_sum + (float)(getClk() - prc->arrival) / prc->runtime;
+                    fprintf(sch_log , "At time %d process %d %s arr %d total %d remain %d wait %d  TA %d  WTA %.2f\n" , getClk() , prc->id , "finished" , prc->arrival , prc->runtime , 0, waited , getClk()-prc->arrival , (getClk()-prc->arrival)/(float)prc->runtime);
+                    WTA_sum = WTA_sum + (float)(getClk()-prc->arrival)/prc->runtime;
                     free(prc);
                 }
+            
             }
         }
-        if (last == 1)
+        if(last==1)
             break;
     }
-    printf("got out of the while loop\n");
     calculate();
+
 }
 
-void SJF(char *algo)
-{
-    p_queue = (struct list *)malloc(sizeof(struct list));
-    initList(p_queue);
-    key_t key1 = ftok("keyfile", Mkey);
-    msgq_id = init_msgq(key1);
-    key_t key3 = ftok("keyfile", Pkey);
-    msgq_process = init_msgq(key3);
 
-    wait_time_sum = 0;
-    process_num = 0;
+
+void SJF(char* algo){
+    p_queue = (struct list*) malloc(sizeof(struct list));
+    initList(p_queue);
+    key_t key1 = ftok("keyfile" , Mkey);
+    msgq_id = init_msgq(key1);
+    key_t key3 = ftok("keyfile" , Pkey);
+    msgq_process = init_msgq(key3);
+    
+
+    wait_time_sum=0;
+    process_num =0;
     WTA_sum = 0;
-    total_running = 0;
-    current_time = getClk();
-    struct process *ptr;
-    int counter = 0;
-    int last = 0;
-    int x = 0;
-    bool check = false;
-    while ((ptr = receiveMessage(msgq_id)) != NULL)
-    {
-        if (ptr->id != 0)
-        {
-            if (ptr->last_process == 1)
-            {
-                add_sjf(p_queue, ptr);
-                last = 1;
-                counter = p_queue->count;
-            }
-            else
-            {
-                while (1)
-                {
-                    if (ptr->last_in_second == 1)
-                    {
-                        if (ptr->last_process)
-                        {
-                            last = 1;
-                            add_sjf(p_queue, ptr);
-                            counter = p_queue->count;
-                            break;
-                        }
-                        add_sjf(p_queue, ptr);
-                        counter = 1;
-                        break;
-                    }
-                    add_sjf(p_queue, ptr);
-                    ptr = receiveMessage(msgq_id);
-                }
-            }
-        }
-        /*else{
-            counter=1;
-        }*/
-        while (ptr->id != 0 && ptr->id != -1)
-        {
-            printf("process received with id=%d\n", ptr->id);
-            add_sjf(p_queue, ptr);
-            ptr = receiveMessage(msgq_id);
-        }
-        while (x < counter)
-        {
-            struct process *prc = get_first(p_queue);
-            if (prc != NULL)
-            {
+    total_running=0;
+    
+    struct process* ptr ;
+    lastprocess=0;
+    while(!(lastprocess && isEmpty(p_queue))){
+        readAll_sjf(ptr);
+        struct process* prc =get_first(p_queue);
+        if(prc){
                 wait_time_sum = wait_time_sum + getClk() - prc->arrival;
                 total_running = total_running + prc->runtime;
                 process_num++;
                 int pid;
                 pid = fork();
-                if (pid == -1)
+                if(pid==-1)
                     printf("error in forking\n");
-                else if (pid == 0)
-                {
-                    printf("a process forked from the scheduler with id=%d\n", prc->id);
-                    compileAndRun("process.out", "process", "process.out", algo, NULL);
+                else if(pid==0){
+                    printf("a process forked from the scheduler with id=%d\n" ,prc->id );
+                    compileAndRun("process.out" , "process" , "process.out" ,algo  , NULL);
                 }
-                else
-                {
+                else{
                     int waited = getClk() - prc->arrival;
-                    fprintf(sch_log, "# At time %d process %d %s arr %d total %d remain %d wait %d\n", getClk(), prc->id, "started", prc->arrival, prc->runtime, prc->runtime, getClk() - prc->arrival);
-                    sendMessage(msgq_process, prc);
+                    fprintf(sch_log , "At time %d process %d %s arr %d total %d remain %d wait %d\n" , getClk() , prc->id , "started" , prc->arrival , prc->runtime , prc->runtime , getClk()-prc->arrival);
+                    sendMessage(msgq_process , prc);
                     int stat_loc;
                     wait(&stat_loc);
-                    fprintf(sch_log, "# At time %d process %d %s arr %d total %d remain %d wait %d  TA %d  WTA  %f\n", getClk(), prc->id, "finished", prc->arrival, prc->runtime, 0, waited, getClk() - prc->arrival, (getClk() - prc->arrival) / (float)prc->runtime);
-                    WTA_sum = WTA_sum + (getClk() - prc->arrival) / (float)prc->runtime;
+                    fprintf(sch_log , "At time %d process %d %s arr %d total %d remain %d wait %d  TA %d  WTA  %.2f\n" , getClk() , prc->id , "finished" , prc->arrival , prc->runtime , 0, waited , getClk()-prc->arrival , (getClk()-prc->arrival)/(float) prc->runtime);
+                    WTA_sum = WTA_sum + (getClk()-prc->arrival)/(float)prc->runtime;
                     free(prc);
                 }
             }
-            x++;
         }
-        x = 0;
-        if (check == true)
-            break;
-    }
-    calculate();
+    
 }
+        
 
 void handler(int signum)
 {
@@ -361,6 +292,31 @@ void readqueue(struct process *prc)
     printf("clock=%d\n", getClk());
 }
 
+void readAll(struct process * prc){
+    prc = receiveMessage_NOWAIT(msgq_id);
+    while(prc){
+        lastprocess = prc->last_process;
+        add(p_queue , prc);
+        if(prc->last_in_second)
+            break;
+        prc = receiveMessage(msgq_id);
+    }
+    display(p_queue);
+    printf("clock=%d\n", getClk());
+}
+void readAll_sjf(struct process * prc){
+    prc = receiveMessage_NOWAIT(msgq_id);
+    while(prc){
+        lastprocess = prc->last_process;
+        add_sjf(p_queue , prc);
+        if(prc->last_in_second)
+            break;
+        prc = receiveMessage(msgq_id);
+    }
+    display(p_queue);
+    printf("clock=%d\n", getClk());
+}
+
 void RR(char *algo, char *Qua)
 {
     p_queue = (struct list *)malloc(sizeof(struct list));
@@ -389,7 +345,8 @@ void RR(char *algo, char *Qua)
     while (!((*shmRM == -1) && isEmpty(p_queue) && lastprocess))
     {
         cnt--;
-        readqueue(ptr);
+        //readqueue(ptr);
+        readAll(ptr);
         if (*shmRM == 0)
         {
             finishProcess(ptr);
@@ -443,7 +400,8 @@ void SRTN(char *algo)
 
     while (!((*shmRM == -1) && isEmpty(p_queue) && lastprocess))
     {
-        readqueue(ptr);
+        //readqueue(ptr);
+        readAll_sjf(ptr);
         if (*shmRM == 0)
         {
             finishProcess(ptr);
