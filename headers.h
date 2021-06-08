@@ -23,6 +23,8 @@ typedef short bool;
 //don't mess with this variable//
 int *shmaddr; //
 //===============================
+char shmProcessKey = 'S';
+
 
 int getClk()
 {
@@ -39,7 +41,7 @@ void initClk()
     while ((int)shmid == -1)
     {
         //Make sure that the clock exists
-        printf("Wait! The clock not initialized yet!\n");
+        printf("Wait!ll The clock not initialized yet!\n");
         sleep(1);
         shmid = shmget(SHKEY, 4, 0444);
     }
@@ -105,6 +107,17 @@ struct process* receiveMessage(int msgq_id){
     int rcv_value = msgrcv(msgq_id , ptr , sizeof(*ptr) , 0 , !IPC_NOWAIT);
     if(rcv_value == -1){
         printf("error in receving from a message queue\n");
+        return NULL;
+    }
+    return ptr;
+
+}
+
+struct process* receiveMessage_NOWAIT(int msgq_id){
+    struct process* ptr = (struct process*) malloc(sizeof(struct process));
+    int rcv_value = msgrcv(msgq_id , ptr , sizeof(*ptr) , 0 , IPC_NOWAIT);
+    if(rcv_value == -1){
+        printf("Not receving from a message queue\n");
         return NULL;
     }
     return ptr;

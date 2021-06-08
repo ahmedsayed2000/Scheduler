@@ -29,15 +29,15 @@ int main(int argc, char *argv[])
         //struct process* last = (struct process*) malloc(sizeof(struct process));
         //struct process* last2 = (struct process*) malloc(sizeof(struct process));
         struct process* end = (struct process*) malloc(sizeof(struct process));
-        prc->id = id;   prc->arrival=arrival;   prc->runtime = runtime;   prc->priority = priority;  prc->remaining_time=0; prc->last_process=0;  prc->last_in_second=0;
+        prc->id = id;   prc->arrival=arrival;   prc->runtime = runtime;   prc->priority = priority;  prc->remaining_time=prc->runtime; prc->last_process=0;  prc->last_in_second=0;
         fscanf(file , "%d %d %d %d" , &id , &arrival , &runtime , &priority);
-        prc1->id = id;   prc1->arrival=arrival;   prc1->runtime = runtime;   prc1->priority = priority;  prc1->last_process=0; prc1->remaining_time=0;  prc1->last_in_second=1;
+        prc1->id = id;   prc1->arrival=arrival;   prc1->runtime = runtime;   prc1->priority = priority;  prc1->last_process=0; prc1->remaining_time=prc1->runtime;;  prc1->last_in_second=1;
         fscanf(file , "%d %d %d %d" , &id , &arrival , &runtime , &priority);
-        prc2->id = id;   prc2->arrival=arrival;   prc2->runtime = runtime;   prc2->priority = priority;   prc2->remaining_time=0;  prc2->last_process=0;  prc2->last_in_second=0;
+        prc2->id = id;   prc2->arrival=arrival;   prc2->runtime = runtime;   prc2->priority = priority;   prc2->remaining_time=prc2->runtime;  prc2->last_process=0;  prc2->last_in_second=0;
         //last->id=0; last->arrival=prc1->arrival;  last->priority=-1;  last->runtime=5000;
         //last2->id=0; last2->arrival=prc2->arrival;  last2->priority=-1;  last2->runtime=5000;
         fscanf(file , "%d %d %d %d" , &id , &arrival , &runtime , &priority);
-        end->id=id;  end->arrival=arrival;  end->priority=priority;  end->runtime=runtime;  end->last_process=1; end->remaining_time=0; end->last_in_second=1;
+        end->id=id;  end->arrival=arrival;  end->priority=priority;  end->runtime=runtime;  end->last_process=1; end->remaining_time=end->runtime;; end->last_in_second=1;
         add(process_list , prc);
         add(process_list , prc1);
         //add(process_list , last);
@@ -49,14 +49,21 @@ int main(int argc, char *argv[])
         fclose(file);
     }
     printf("message queue is done\n");
-    key_t key = ftok("/home/ahmed/Desktop" , Mkey);
+    key_t key = ftok("keyfile" , Mkey);
     msgq_id = init_msgq(key);
     printf("message queue id=%d\n" , msgq_id);
 
     
     // 2. Read the chosen scheduling algorithm and its parameters, if there are any from the argument list.
     char* algo = argv[2];
-    
+    char* quantom = NULL;
+    if(strcmp(algo,"rr")==0)
+    {
+        quantom = argv[3];
+       // printf("qhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhq=%s\n",quantom);
+        //printf("arggggggggggggg=%s\n",argv[3]);
+        
+    }
 
     // 3. Initiate and create the scheduler and clock processes.
     int pid;
@@ -65,7 +72,7 @@ int main(int argc, char *argv[])
         perror("error in forking\n");
     else if(pid==0){
         printf("Iam the clock and my pid = %d\n" , getpid());
-        compileAndRun("/home/ahmed/Desktop/project/clk.out" , "clk" , "clk.out" , NULL , NULL);
+        compileAndRun("clk.out" , "clk" , "clk.out" , NULL , NULL);
     }
     else{
             // forking the sheduler
@@ -73,7 +80,7 @@ int main(int argc, char *argv[])
             if(pid == 0){
                 printf("Iam the scheduler and my pid = %d\n" , getpid());
                 //scheduler_id = getpid();
-                compileAndRun("/home/ahmed/Desktop/project/scheduler.out" , "scheduler" , "scheduler.out" , algo , NULL);
+                compileAndRun("scheduler.out" , "scheduler" , "scheduler.out" , algo , quantom);
             }
             else if(pid == -1){
                 printf("error in forking the scheduler\n");

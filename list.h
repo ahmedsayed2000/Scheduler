@@ -142,3 +142,45 @@ void add_sjf(struct list* ls , struct process* item){
     }
 }
 
+
+void add_PIR(struct list* ls , struct process* item){
+    if(ls->head == NULL){
+        ls->head =(struct node*) malloc(sizeof(struct node));
+        ls->head->data = item;
+        ls->head->next = NULL;
+        ls->count++;
+        return;
+    }
+    else{
+        struct node* ptr = ls->head;
+        struct node* back = ls->head;
+        while(ptr){
+            if(ptr->data->priority <= item->priority){
+                back = ptr;
+                ptr=ptr->next;
+            }
+            else{
+                struct node* new_node = (struct node*) malloc(sizeof(struct node));
+                if(ptr==ls->head){
+                    struct node* temp = (struct node*) malloc(sizeof(struct node));
+                    temp = ls->head;
+                    new_node->data = item;
+                    new_node->next = back;
+                    ls->head = new_node;
+                    ls->count++;
+                    return;
+                }
+                new_node->data = item;
+                new_node->next = ptr;
+                back->next = new_node;
+                return;
+            }
+        }
+        struct node* new_node = (struct node*) malloc(sizeof(struct node));
+        new_node->data = item;
+        new_node->next = back->next;
+        back->next = new_node;
+        ls->count++;
+    }
+}
+
