@@ -22,7 +22,7 @@ int main(int agrc, char *argv[])
     char *algo = argv[1];
     if (strcmp(algo, "1") == 0 || strcmp(algo, "2") == 0)
         FCFS_OR_SJF();
-    else if (strcmp(algo, "5") == 0 || strcmp(algo , "4"))
+    else if (strcmp(algo, "5") == 0 || strcmp(algo , "4")==0 || strcmp(algo , "3")==0)
     {
         
 

@@ -44,6 +44,7 @@ struct list *temp;
 void calculate();
 void readAll(struct process*);
 void readAll_sjf();
+void read_next();
 
 int main(int argc, char *argv[])
 {
@@ -310,9 +311,10 @@ void readAll_sjf(){
         lastprocess = prc->last_process;
         add_sjf(p_queue , prc);
         printf("process added to the ready queue with id=%d and position=%d\n" , prc->id , 1);
-        /*if(prc->last_in_second)
-            break;*/
-        prc = receiveMessage_NOWAIT(msgq_id);
+        if(prc->last_in_second == 0)
+            prc = receiveMessage(msgq_id);
+        else
+            prc = receiveMessage_NOWAIT(msgq_id);
     }
     display(p_queue);
     printf("clock=%d\n", getClk());
@@ -438,6 +440,20 @@ void SRTN(char *algo)
     calculate();
 }
 
+void read_next(){
+    struct process* prc =receiveMessage_NOWAIT(msgq_id);
+    while(prc){
+        add_PIR(p_queue,prc);
+        lastprocess = prc->last_process;
+        if(prc->last_in_second == 0)
+            prc = receiveMessage(msgq_id);
+        else
+            prc = receiveMessage_NOWAIT(msgq_id);
+    }
+    display(p_queue);
+    printf("clock=%d\n", getClk());
+}
+
 void HPF(char *algo)
 {
 
@@ -460,7 +476,8 @@ void HPF(char *algo)
 
     while (!((*shmRM == -1) && isEmpty(p_queue) && lastprocess))
     {
-        readqueue(ptr);
+        //readqueue(ptr);
+        read_next();
         if (*shmRM == 0)
         {
             finishProcess(ptr);
